@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PSC Risk Calculator | 造口周围皮肤并发症风险计算器</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #8b5cf6;
+      --accent-soft: #f3e8ff;
+      --good: #059669;
+      --warn: #d97706;
+      --high: #dc2626;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.08);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #fafafa 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 42px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 26px;
+      margin-bottom: 22px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .lang-toggle button {
+      border: 0;
+      background: transparent;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .lang-toggle button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    select, button.action {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 15px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      width: auto;
+      min-width: 140px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .secondary {
+      background: #fff;
+    }
+
+    .risk-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #6d28d9;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .risk-number {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+      margin: 4px 0 0;
+    }
+
+    .risk-label {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 2px 0 0;
+    }
+
+    .risk-desc {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .meter {
+      position: relative;
+      height: 16px;
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter-marker {
+      position: absolute;
+      top: -4px;
+      width: 3px;
+      height: 24px;
+      background: #111827;
+      border-radius: 999px;
+      transform: translateX(-50%);
+    }
+
+    .meter-scale {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .coef-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .coef-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 14px;
+      background: #fafafa;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 14px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 14px;
+      overflow-x: auto;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .note {
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+      background: #fafafa;
+      border: 1px dashed #d1d5db;
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 940px) {
+      .grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .risk-number { font-size: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="topbar">
+        <div>
+          <h1 id="title">造口周围皮肤并发症风险计算器 / PSC Risk Calculator</h1>
+          <div class="sub" id="subtitle"></div>
+        </div>
+        <div class="lang-toggle" aria-label="language switcher">
+          <button id="btn-zh" class="active">中文</button>
+          <button id="btn-en">English</button>
+          <button id="btn-bi">双语 / Bilingual</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2 class="section-title" id="inputTitle"></h2>
+        <div class="form-grid">
+          <div class="field full">
+            <label for="education" id="labelEducation"></label>
+            <select id="education">
+              <option value="yes"></option>
+              <option value="no"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="therapy" id="labelTherapy"></label>
+            <select id="therapy">
+              <option value="radiotherapy"></option>
+              <option value="chemotherapy"></option>
+              <option value="targeting"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="positioning" id="labelPositioning"></label>
+            <select id="positioning">
+              <option value="yes"></option>
+              <option value="no"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="height" id="labelHeight"></label>
+            <select id="height">
+              <option value="lt15"></option>
+              <option value="ge15"></option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="stomaType" id="labelStomaType"></label>
+            <select id="stomaType">
+              <option value="colostomy"></option>
+              <option value="ileostomy"></option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="excrement" id="labelExcrement"></label>
+            <select id="excrement">
+              <option value="normal"></option>
+              <option value="irregular"></option>
+              <option value="watery"></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="action primary" id="calcBtn"></button>
+          <button class="action secondary" id="resetBtn"></button>
+        </div>
+
+        <div class="note" id="clinicalNote"></div>
+      </section>
+
+      <section class="card risk-panel">
+        <div>
+          <span class="pill" id="resultBadge"></span>
+          <div class="risk-number" id="riskValue">--</div>
+          <div class="risk-label" id="riskLevel">--</div>
+        </div>
+
+        <p class="risk-desc" id="riskText"></p>
+
+        <div>
+          <div class="meter">
+            <div class="meter-marker" id="meterMarker" style="left:0%"></div>
+          </div>
+          <div class="meter-scale">
+            <span>0%</span>
+            <span>25%</span>
+            <span>50%</span>
+            <span>75%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="section-title" id="contribTitle"></h3>
+          <div class="coef-list" id="coefList"></div>
+        </div>
+
+        <div>
+          <h3 class="section-title" id="formulaTitle"></h3>
+          <div class="formula" id="formulaBox"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer" id="footerText"></div>
+  </div>
+
+  <script>
+    const i18n = {
+      zh: {
+        title: '造口周围皮肤并发症风险计算器',
+        subtitle: '基于文献中的多因素Logistic回归模型，用于估算 colorectal cancer 合并 ostomy 患者发生 PSCs（peristomal skin complications，造口周围皮肤并发症）的预测概率。',
+        inputTitle: '输入参数',
+        labelEducation: '围手术期多形式健康教育',
+        labelTherapy: '术后3个月内肿瘤治疗方式',
+        labelPositioning: '术前造口定位',
+        labelHeight: '造口高度',
+        labelStomaType: '造口类型',
+        labelExcrement: '排泄物状态',
+        calcBtn: '开始计算',
+        resetBtn: '重置',
+        clinicalNote: '说明：该工具是文献模型的网页化实现，用于教学、展示或科研交流，不应替代临床诊断与个体化医疗判断。',
+        resultBadge: '预测结果',
+        resultTitle: '风险分解',
+        formulaTitle: '计算公式',
+        footerText: '系数按文献表格录入：截距 3.235；有健康教育 -2.767；化疗 -2.710；靶向治疗 -2.739；有术前定位 -1.670；造口高度 ≥1.5 cm 为 -2.101；回肠造口 +2.072；排便不规律 +0.178；水样便 +2.723。参考组分别为：无健康教育、放疗、无术前定位、造口高度 <1.5 cm、结肠造口、正常排便。',
+        yes: '有 / 是',
+        no: '无 / 否',
+        radiotherapy: '放疗',
+        chemotherapy: '化疗',
+        targeting: '靶向治疗',
+        lt15: '< 1.5 cm',
+        ge15: '≥ 1.5 cm',
+        colostomy: '结肠造口',
+        ileostomy: '回肠造口',
+        normal: '正常',
+        irregular: '不规律',
+        watery: '水样便',
+        low: '较低风险',
+        moderate: '中等风险',
+        high: '较高风险',
+        riskText: '当前组合条件下，模型估算 PSCs 发生概率为 {risk}。该结果表示统计学预测风险，不等同于必然发生。',
+        contributionPositive: '增加风险',
+        contributionNegative: '降低风险',
+        contributionNeutral: '参考水平',
+        intercept: '截距',
+        probability: '预测概率',
+        formulaLabel: '模型表达式'
+      },
+      en: {
+        title: 'PSC Risk Calculator',
+        subtitle: 'A web calculator based on the published multivariable logistic regression model to estimate the probability of PSCs (peristomal skin complications) in patients with colorectal cancer and an ostomy.',
+        inputTitle: 'Inputs',
+        labelEducation: 'Multiform perioperative health education',
+        labelTherapy: 'Tumor therapy within 3 months',
+        labelPositioning: 'Preoperative stoma positioning',
+        labelHeight: 'Stoma height',
+        labelStomaType: 'Stoma type',
+        labelExcrement: 'Excrement status',
+        calcBtn: 'Calculate',
+        resetBtn: 'Reset',
+        clinicalNote: 'Note: This tool is a web implementation of a published model for teaching, presentation, or research communication. It should not replace clinical diagnosis or individualized medical judgment.',
+        resultBadge: 'Prediction',
+        resultTitle: 'Risk breakdown',
+        formulaTitle: 'Formula',
+        footerText: 'Coefficients entered from the publication: intercept 3.235; health education yes -2.767; chemotherapy -2.710; targeting therapy -2.739; preoperative positioning yes -1.670; stoma height ≥1.5 cm -2.101; ileostomy +2.072; irregular stool +0.178; watery stool +2.723. Reference categories are: no health education, radiotherapy, no preoperative positioning, stoma height <1.5 cm, colostomy, and normal stool.',
+        yes: 'Yes',
+        no: 'No',
+        radiotherapy: 'Radiotherapy',
+        chemotherapy: 'Chemotherapy',
+        targeting: 'Targeting therapy',
+        lt15: '< 1.5 cm',
+        ge15: '≥ 1.5 cm',
+        colostomy: 'Colostomy',
+        ileostomy: 'Ileostomy',
+        normal: 'Normal',
+        irregular: 'Irregular',
+        watery: 'Watery',
+        low: 'Lower risk',
+        moderate: 'Moderate risk',
+        high: 'Higher risk',
+        riskText: 'Under the selected conditions, the model estimates a PSC risk of {risk}. This is a statistical prediction rather than a certainty.',
+        contributionPositive: 'Increases risk',
+        contributionNegative: 'Reduces risk',
+        contributionNeutral: 'Reference level',
+        intercept: 'Intercept',
+        probability: 'Predicted probability',
+        formulaLabel: 'Model expression'
+      },
+      bi: {
+        title: '造口周围皮肤并发症风险计算器 / PSC Risk Calculator',
+        subtitle: '基于已发表的多因素Logistic回归模型 / Based on a published multivariable logistic regression model for estimating the probability of PSCs in patients with colorectal cancer and an ostomy.',
+        inputTitle: '输入参数 / Inputs',
+        labelEducation: '围手术期多形式健康教育 / Multiform perioperative health education',
+        labelTherapy: '术后3个月内肿瘤治疗方式 / Tumor therapy within 3 months',
+        labelPositioning: '术前造口定位 / Preoperative stoma positioning',
+        labelHeight: '造口高度 / Stoma height',
+        labelStomaType: '造口类型 / Stoma type',
+        labelExcrement: '排泄物状态 / Excrement status',
+        calcBtn: '开始计算 / Calculate',
+        resetBtn: '重置 / Reset',
+        clinicalNote: '说明 / Note：该工具用于教学、展示或科研交流，不替代临床诊断。This tool supports teaching, presentation, and research communication, and does not replace clinical diagnosis.',
+        resultBadge: '预测结果 / Prediction',
+        resultTitle: '风险分解 / Risk breakdown',
+        formulaTitle: '计算公式 / Formula',
+        footerText: '系数按论文表格录入 / Coefficients entered from the publication. 参考组 / Reference categories: 无健康教育、放疗、无术前定位、造口高度 <1.5 cm、结肠造口、正常排便 / no health education, radiotherapy, no preoperative positioning, stoma height <1.5 cm, colostomy, normal stool.',
+        yes: '有 / Yes',
+        no: '无 / No',
+        radiotherapy: '放疗 / Radiotherapy',
+        chemotherapy: '化疗 / Chemotherapy',
+        targeting: '靶向治疗 / Targeting therapy',
+        lt15: '< 1.5 cm',
+        ge15: '≥ 1.5 cm',
+        colostomy: '结肠造口 / Colostomy',
+        ileostomy: '回肠造口 / Ileostomy',
+        normal: '正常 / Normal',
+        irregular: '不规律 / Irregular',
+        watery: '水样便 / Watery',
+        low: '较低风险 / Lower risk',
+        moderate: '中等风险 / Moderate risk',
+        high: '较高风险 / Higher risk',
+        riskText: '当前组合条件下，模型估算 PSCs 发生概率为 {risk}。/ Under the selected conditions, the model estimates a PSC risk of {risk}.',
+        contributionPositive: '增加风险 / Increases risk',
+        contributionNegative: '降低风险 / Reduces risk',
+        contributionNeutral: '参考水平 / Reference level',
+        intercept: '截距 / Intercept',
+        probability: '预测概率 / Predicted probability',
+        formulaLabel: '模型表达式 / Model expression'
+      }
+    };
+
+    const coeffs = {
+      intercept: 3.235,
+      education: { yes: -2.767, no: 0 },
+      therapy: { radiotherapy: 0, chemotherapy: -2.710, targeting: -2.739 },
+      positioning: { yes: -1.670, no: 0 },
+      height: { lt15: 0, ge15: -2.101 },
+      stomaType: { colostomy: 0, ileostomy: 2.072 },
+      excrement: { normal: 0, irregular: 0.178, watery: 2.723 }
+    };
+
+    let currentLang = 'bi';
+
+    const el = (id) => document.getElementById(id);
+
+    function optionText(key) {
+      return i18n[currentLang][key];
+    }
+
+    function setSelectOptions() {
+      el('education').options[0].text = optionText('yes');
+      el('education').options[1].text = optionText('no');
+
+      el('therapy').options[0].text = optionText('radiotherapy');
+      el('therapy').options[1].text = optionText('chemotherapy');
+      el('therapy').options[2].text = optionText('targeting');
+
+      el('positioning').options[0].text = optionText('yes');
+      el('positioning').options[1].text = optionText('no');
+
+      el('height').options[0].text = optionText('lt15');
+      el('height').options[1].text = optionText('ge15');
+
+      el('stomaType').options[0].text = optionText('colostomy');
+      el('stomaType').options[1].text = optionText('ileostomy');
+
+      el('excrement').options[0].text = optionText('normal');
+      el('excrement').options[1].text = optionText('irregular');
+      el('excrement').options[2].text = optionText('watery');
+    }
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('.lang-toggle button').forEach(btn => btn.classList.remove('active'));
+      el(`btn-${lang}`).classList.add('active');
+
+      const t = i18n[lang];
+      el('title').textContent = t.title;
+      el('subtitle').textContent = t.subtitle;
+      el('inputTitle').textContent = t.inputTitle;
+      el('labelEducation').textContent = t.labelEducation;
+      el('labelTherapy').textContent = t.labelTherapy;
+      el('labelPositioning').textContent = t.labelPositioning;
+      el('labelHeight').textContent = t.labelHeight;
+      el('labelStomaType').textContent = t.labelStomaType;
+      el('labelExcrement').textContent = t.labelExcrement;
+      el('calcBtn').textContent = t.calcBtn;
+      el('resetBtn').textContent = t.resetBtn;
+      el('clinicalNote').textContent = t.clinicalNote;
+      el('resultBadge').textContent = t.resultBadge;
+      el('contribTitle').textContent = t.resultTitle;
+      el('formulaTitle').textContent = t.formulaTitle;
+      el('footerText').textContent = t.footerText;
+      setSelectOptions();
+      calculate();
+    }
+
+    function formatPct(value) {
+      return `${(value * 100).toFixed(1)}%`;
+    }
+
+    function riskBand(prob) {
+      const t = i18n[currentLang];
+      if (prob < 0.2) return { label: t.low, color: 'var(--good)' };
+      if (prob < 0.5) return { label: t.moderate, color: 'var(--warn)' };
+      return { label: t.high, color: 'var(--high)' };
+    }
+
+    function selectedLabel(selectId) {
+      const select = el(selectId);
+      return select.options[select.selectedIndex].text;
+    }
+
+    function calculate() {
+      const values = {
+        education: el('education').value,
+        therapy: el('therapy').value,
+        positioning: el('positioning').value,
+        height: el('height').value,
+        stomaType: el('stomaType').value,
+        excrement: el('excrement').value
+      };
+
+      const parts = [
+        { key: 'education', label: i18n[currentLang].labelEducation, valueLabel: selectedLabel('education'), coef: coeffs.education[values.education] },
+        { key: 'therapy', label: i18n[currentLang].labelTherapy, valueLabel: selectedLabel('therapy'), coef: coeffs.therapy[values.therapy] },
+        { key: 'positioning', label: i18n[currentLang].labelPositioning, valueLabel: selectedLabel('positioning'), coef: coeffs.positioning[values.positioning] },
+        { key: 'height', label: i18n[currentLang].labelHeight, valueLabel: selectedLabel('height'), coef: coeffs.height[values.height] },
+        { key: 'stomaType', label: i18n[currentLang].labelStomaType, valueLabel: selectedLabel('stomaType'), coef: coeffs.stomaType[values.stomaType] },
+        { key: 'excrement', label: i18n[currentLang].labelExcrement, valueLabel: selectedLabel('excrement'), coef: coeffs.excrement[values.excrement] }
+      ];
+
+      let z = coeffs.intercept;
+      parts.forEach(item => { z += item.coef; });
+      const p = 1 / (1 + Math.exp(-z));
+      const band = riskBand(p);
+
+      el('riskValue').textContent = formatPct(p);
+      el('riskLevel').textContent = band.label;
+      el('riskLevel').style.color = band.color;
+      el('riskText').textContent = i18n[currentLang].riskText.replace('{risk}', formatPct(p));
+      el('meterMarker').style.left = `${Math.max(0, Math.min(100, p * 100))}%`;
+
+      const list = [
+        { label: i18n[currentLang].intercept, valueLabel: '', coef: coeffs.intercept },
+        ...parts
+      ];
+
+      el('coefList').innerHTML = list.map(item => {
+        let status = i18n[currentLang].contributionNeutral;
+        if (item.coef > 0) status = i18n[currentLang].contributionPositive;
+        if (item.coef < 0) status = i18n[currentLang].contributionNegative;
+        return `
+          <div class="coef-item">
+            <div>
+              <div><strong>${item.label}</strong>${item.valueLabel ? `：${item.valueLabel}` : ''}</div>
+              <div class="muted">${status}</div>
+            </div>
+            <div><strong>${item.coef >= 0 ? '+' : ''}${item.coef.toFixed(3)}</strong></div>
+          </div>
+        `;
+      }).join('');
+
+      const formulaMap = {
+        zh: [
+          `${i18n[currentLang].formulaLabel}`,
+          `Logit(P) = Z = 3.235 - 2.767X1 - 2.710X2 - 2.739X3 - 1.670X4 - 2.101X5 + 2.072X6 + 0.178X7 + 2.723X8`,
+          `P = 1 / (1 + e^(-Z))`,
+          `变量定义：X1=有围手术期多形式健康教育；X2=化疗；X3=靶向治疗；X4=有术前造口定位；X5=造口高度≥1.5 cm；X6=回肠造口；X7=排泄物不规律；X8=水样便。`,
+          `参考组：无健康教育、放疗、无术前定位、造口高度<1.5 cm、结肠造口、正常排泄。`,
+          `当前代入：Z = 3.235 + (${coeffs.education[values.education].toFixed(3)}) + (${coeffs.therapy[values.therapy].toFixed(3)}) + (${coeffs.positioning[values.positioning].toFixed(3)}) + (${coeffs.height[values.height].toFixed(3)}) + (${coeffs.stomaType[values.stomaType].toFixed(3)}) + (${coeffs.excrement[values.excrement].toFixed(3)}) = ${z.toFixed(3)}`,
+          `当前预测概率：P = ${formatPct(p)}`
+        ],
+        en: [
+          `${i18n[currentLang].formulaLabel}`,
+          `Logit(P) = Z = 3.235 - 2.767X1 - 2.710X2 - 2.739X3 - 1.670X4 - 2.101X5 + 2.072X6 + 0.178X7 + 2.723X8`,
+          `P = 1 / (1 + e^(-Z))`,
+          `Variable definitions: X1=multiform perioperative health education; X2=chemotherapy; X3=targeting therapy; X4=preoperative stoma positioning; X5=stoma height ≥1.5 cm; X6=ileostomy; X7=irregular stool; X8=watery stool.`,
+          `Reference groups: no health education, radiotherapy, no preoperative positioning, stoma height <1.5 cm, colostomy, normal stool.`,
+          `Current substitution: Z = 3.235 + (${coeffs.education[values.education].toFixed(3)}) + (${coeffs.therapy[values.therapy].toFixed(3)}) + (${coeffs.positioning[values.positioning].toFixed(3)}) + (${coeffs.height[values.height].toFixed(3)}) + (${coeffs.stomaType[values.stomaType].toFixed(3)}) + (${coeffs.excrement[values.excrement].toFixed(3)}) = ${z.toFixed(3)}`,
+          `Current predicted probability: P = ${formatPct(p)}`
+        ],
+        bi: [
+          `${i18n[currentLang].formulaLabel}`,
+          `Logit(P) = Z = 3.235 - 2.767X1 - 2.710X2 - 2.739X3 - 1.670X4 - 2.101X5 + 2.072X6 + 0.178X7 + 2.723X8`,
+          `P = 1 / (1 + e^(-Z))`,
+          `变量定义 / Variable definitions: X1=有围手术期多形式健康教育 / multiform perioperative health education; X2=化疗 / chemotherapy; X3=靶向治疗 / targeting therapy; X4=有术前造口定位 / preoperative stoma positioning; X5=造口高度≥1.5 cm / stoma height ≥1.5 cm; X6=回肠造口 / ileostomy; X7=排泄物不规律 / irregular stool; X8=水样便 / watery stool.`,
+          `参考组 / Reference groups: 无健康教育、放疗、无术前定位、造口高度<1.5 cm、结肠造口、正常排泄 / no health education, radiotherapy, no preoperative positioning, stoma height <1.5 cm, colostomy, normal stool.`,
+          `当前代入 / Current substitution: Z = 3.235 + (${coeffs.education[values.education].toFixed(3)}) + (${coeffs.therapy[values.therapy].toFixed(3)}) + (${coeffs.positioning[values.positioning].toFixed(3)}) + (${coeffs.height[values.height].toFixed(3)}) + (${coeffs.stomaType[values.stomaType].toFixed(3)}) + (${coeffs.excrement[values.excrement].toFixed(3)}) = ${z.toFixed(3)}`,
+          `当前预测概率 / Current predicted probability: P = ${formatPct(p)}`
+        ]
+      };
+      el('formulaBox').textContent = formulaMap[currentLang].join('\n');
+    }
+
+    function resetForm() {
+      el('education').value = 'yes';
+      el('therapy').value = 'chemotherapy';
+      el('positioning').value = 'yes';
+      el('height').value = 'ge15';
+      el('stomaType').value = 'colostomy';
+      el('excrement').value = 'normal';
+      calculate();
+    }
+
+    el('btn-zh').addEventListener('click', () => applyLanguage('zh'));
+    el('btn-en').addEventListener('click', () => applyLanguage('en'));
+    el('btn-bi').addEventListener('click', () => applyLanguage('bi'));
+    el('calcBtn').addEventListener('click', calculate);
+    el('resetBtn').addEventListener('click', resetForm);
+    ['education', 'therapy', 'positioning', 'height', 'stomaType', 'excrement'].forEach(id => {
+      el(id).addEventListener('change', calculate);
+    });
+
+    applyLanguage('bi');
+    resetForm();
+  </script>
+</body>
+</html>
